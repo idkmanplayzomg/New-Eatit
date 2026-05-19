@@ -1,0 +1,52 @@
+import { db, auth } from './firebase.js';
+
+import {
+collection,
+addDoc,
+query,
+where,
+getDocs,
+serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+const params=new URLSearchParams(location.search);
+const threadId=params.get('id');
+
+const posts=document.getElementById('posts');
+
+async function loadPosts(){
+const q=query(collection(db,'posts'),where('threadId','==',threadId));
+const snap=await getDocs(q);
+
+posts.innerHTML='';
+
+snap.forEach((doc)=>{
+const data=doc.data();
+
+posts.innerHTML += `
+<div class="post">
+<div class="post-header">${data.author}</div>
+<div class="post-content">${data.content}</div>
+</div>
+`;
+});
+}
+
+loadPosts();
+
+const replyForm=document.getElementById('replyForm');
+
+replyForm.addEventListener('submit',async(e)=>{
+e.preventDefault();
+
+await addDoc(collection(db,'posts'),{
+threadId,
+author:auth.currentUser?.email || 'Guest',
+content:document.getElementById('replyContent').value,
+createdAt:serverTimestamp()
+});
+
+document.getElementById('replyContent').value='';
+
+loadPosts();
+});
