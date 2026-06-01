@@ -1,74 +1,78 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Automated AUX Broadcaster</title>
-    <!-- Stable fallback mirror link for ggwave framework -->
+    <title>Instant AUX Receiver</title>
     <script src="https://cloudflare.com" crossorigin="anonymous"></script>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; background: #1a1a1a; color: #fff; padding-top: 50px; }
-        #status { font-size: 24px; color: #00ff00; margin-top: 20px; font-weight: bold; }
-        #startBtn { padding: 15px 30px; font-size: 18px; cursor: pointer; background: #ff4500; border: none; border-radius: 5px; color: white; font-weight: bold; }
+        body { font-family: 'Arial', sans-serif; text-align: center; background: #111; color: #fff; padding-top: 40px; }
+        .display-container { margin-top: 30px; }
+        #sub-count {
+            font-size: 110px; font-weight: bold; color: #00ff66; 
+            background: #1c1c1c; display: inline-block; padding: 20px 60px;
+            border-radius: 20px; border: 4px solid #00ff66;
+            text-shadow: 0 0 25px rgba(0, 255, 102, 0.4); box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        #channel-name { font-size: 45px; font-weight: bold; margin-top: 25px; color: #ffffff; }
+        #channel-handle { font-size: 28px; color: #00bcd4; font-style: italic; margin-top: 5px; }
+        #status { font-size: 16px; color: #666; margin-top: 40px; }
+        #listenBtn { padding: 15px 30px; font-size: 20px; cursor: pointer; background: #00ff66; border: none; border-radius: 8px; font-weight: bold; color: #111; }
     </style>
 </head>
 <body>
-    <h1>Live Analytics AUX Broadcaster</h1>
-    <p>Bundling and transmitting Sub Count via Soundwaves.</p>
-    <button id="startBtn">👉 START BROADCASTER 👈</button>
-    <div id="status">Status: Ready to start...</div>
+    <h1>⚡ Real-Time Instant Monitor ⚡</h1>
+    <button id="listenBtn">👂 START INSTANT MONITOR 👂</button>
+
+    <div class="display-container">
+        <div id="sub-count">000</div>
+        <div id="channel-name">Waiting for burst...</div>
+        <div id="channel-handle">@offline</div>
+    </div>
+    <div id="status">Status: Click button to unlock mic.</div>
 
     <script>
         let ggwaveCtx = null;
-        let isRunning = false;
-        
-        // 1. IMPORTANT: REPLACE THIS STRING WITH YOUR REAL YOUTUBE CHANNEL ID (Starts with UC...)
-        const CHANNEL_ID = "UCgZkNyFoXSEBek9HKS94FHA"; 
+        let isListening = false;
 
-        // Stable, open-source bypass layout tracking endpoint
-        const API_URL = `https://sccount.com{CHANNEL_ID}`;
+        document.getElementById('listenBtn').addEventListener('click', async () => {
+            if (isListening) return;
+            isListening = true;
 
-        document.getElementById('startBtn').addEventListener('click', async () => {
-            if (isRunning) return;
-            isRunning = true;
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            ggwaveCtx = new AudioContext();
-            document.getElementById('startBtn').style.display = 'none';
-            runBroadcastLoop();
-        });
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                ggwaveCtx = new AudioContext({ sampleRate: 48000 });
+                const source = ggwaveCtx.createMediaStreamSource(stream);
+                source.connect(ggwaveCtx.destination);
 
-        async function runBroadcastLoop() {
-            while (isRunning) {
-                try {
-                    document.getElementById('status').innerText = "Fetching live network tracker data...";
-                    
-                    let response = await fetch(API_URL);
-                    let data = await response.json();
-                    
-                    // Direct property mapping strings from sccount API layout
-                    let subs = data.subscribers || data.counts?.subscribers || "0";
-                    let name = data.name || data.title || "My Channel";
-                    let handle = data.handle || "@handle";
-                    let bundledData = `${subs}|${name}|${handle}`;
-                    
-                    document.getElementById('status').innerText = `Transmitting over AUX: "${name}" (${handle})`;
-                    
+                // Lowered blocksize from 1024 to 256 for instant hardware processing
+                const processor = ggwaveCtx.createScriptProcessor(256, 1, 1);
+                source.connect(processor);
+                processor.connect(ggwaveCtx.destination);
+
+                document.getElementById('status').innerText = "Status: Monitoring live audio stream...";
+                document.getElementById('listenBtn').style.display = 'none';
+
+                processor.onaudioprocess = function(e) {
+                    let inputData = e.inputBuffer.getChannelData(0);
                     let engine = window.ggwave || window.Ggwave;
-                    let waveform = engine.encode(bundledData, 0, 10); 
-
-                    let audioBuffer = ggwaveCtx.createBuffer(1, waveform.length, 48000);
-                    let channelData = audioBuffer.getChannelData(0);
-                    for (let i = 0; i < waveform.length; i++) { channelData[i] = waveform[i]; }
+                    let res = engine.decode(inputData);
                     
-                    let source = ggwaveCtx.createBufferSource();
-                    source.buffer = audioBuffer;
-                    source.connect(ggwaveCtx.destination);
-                    source.start();
-                } catch (error) {
-                    document.getElementById('status').innerText = "Network Block. Retrying in 15 seconds...";
-                    console.error("Fetch Execution Failure Layout Exception:", error);
-                }
-                await new Promise(resolve => setTimeout(resolve, 15000));
+                    if (res) {
+                        let decodedString = new TextDecoder().decode(res);
+                        let pieces = decodedString.split('|');
+                        if (pieces.length === 3) {
+                            document.getElementById('sub-count').innerText = Number(pieces[0]).toLocaleString();
+                            document.getElementById('channel-name').innerText = pieces[1];
+                            document.getElementById('channel-handle').innerText = pieces[2];
+                            document.getElementById('status').innerText = "Burst decoded instantly.";
+                        }
+                    }
+                };
+            } catch (err) {
+                document.getElementById('status').innerText = "Error: Input mapping failed.";
+                console.error(err);
             }
-        }
+        });
     </script>
 </body>
 </html>
