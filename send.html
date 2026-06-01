@@ -32,9 +32,10 @@
         let isListening = false;
         let receivedBuffer = "";
         let lastToneTime = 0;
+        let lastCharCode = -1;
 
-        const BASE_FREQ = 1000;
-        const STEP_FREQ = 40;
+        const BASE_FREQ = 1200;
+        const STEP_FREQ = 25;
 
         document.getElementById('listenBtn').addEventListener('click', async () => {
             if (isListening) return;
@@ -42,25 +43,22 @@
 
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                const audioCtx = new AudioContext();
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 const source = audioCtx.createMediaStreamSource(stream);
                 
-                // Set up a frequency analyzer loop to find pitch spikes in real-time
                 const analyser = audioCtx.createAnalyser();
-                analyser.fftSize = 2048;
+                analyser.fftSize = 2048; 
                 source.connect(analyser);
 
-                document.getElementById('status').innerText = "Status: Monitoring audio vectors natively...";
+                document.getElementById('status').innerText = "Status: Processing frequencies natively...";
                 document.getElementById('listenBtn').style.display = 'none';
 
                 const bufferLength = analyser.frequencyBinCount;
                 const dataArray = new Uint8Array(bufferLength);
                 const sampleRate = audioCtx.sampleRate;
 
-                function detectTones() {
+                function processAudio() {
                     analyser.getByteFrequencyData(dataArray);
-                    
                     let maxVal = 0;
                     let maxIndex = -1;
 
@@ -71,40 +69,41 @@
                         }
                     }
 
-                    // Look for a dominant pitch wave spike coming down the copper wire
-                    if (maxVal > 150) { 
+                    // Sound wave detection threshold
+                    if (maxVal > 140) { 
                         let currentFreq = maxIndex * (sampleRate / analyser.fftSize);
+                        let calculatedCode = Math.round((currentFreq - BASE_FREQ) / STEP_FREQ);
                         let now = Date.now();
 
-                        // Debounce threshold loop to avoid duplicating letters
-                        if (now - lastToneTime > 45) {
-                            let approximateCode = Math.round((currentFreq - BASE_FREQ) / STEP_FREQ);
-                            
-                            if (approximateCode >= 32 && approximateCode <= 126) {
-                                let char = String.fromCharCode(approximateCode);
-                                receivedBuffer += char;
+                        // Debounce threshold validation loop
+                        if (calculatedCode >= 32 && calculatedCode <= 126) {
+                            if (now - lastToneTime > 35 || calculatedCode !== lastCharCode) {
+                                let char = String.fromCharCode(calculatedCode);
+                                
+                                if (char === '~') { // End-of-packet token caught
+                                    let pieces = receivedBuffer.split('|');
+                                    if (pieces.length === 3) {
+                                        document.getElementById('sub-count').innerText = Number(pieces[0]).toLocaleString();
+                                        document.getElementById('channel-name').innerText = pieces[1];
+                                        document.getElementById('channel-handle').innerText = pieces[2];
+                                        document.getElementById('status').innerText = "Data matrix parsed instantly!";
+                                    }
+                                    receivedBuffer = "";
+                                } else {
+                                    receivedBuffer += char;
+                                }
                                 lastToneTime = now;
+                                lastCharCode = calculatedCode;
                             }
-                        }
-                    } else {
-                        // If silence returns for 400ms, process the full string block
-                        if (receivedBuffer.length > 0 && Date.now() - lastToneTime > 400) {
-                            let pieces = receivedBuffer.split('|');
-                            if (pieces.length === 3) {
-                                document.getElementById('sub-count').innerText = Number(pieces[0]).toLocaleString();
-                                document.getElementById('channel-name').innerText = pieces[1];
-                                document.getElementById('channel-handle').innerText = pieces[2];
-                                document.getElementById('status').innerText = "Data updated natively.";
-                            }
-                            receivedBuffer = "";
                         }
                     }
-                    requestAnimationFrame(detectTones);
+                    requestAnimationFrame(processAudio);
                 }
-                detectTones();
+                processAudio();
 
             } catch (err) {
-                document.getElementById('status').innerText = "Error: Input interface failed.";
+                document.getElementById('status').innerText = "Error: Soundcard mapping failed.";
+                console.error(err);
             }
         });
     </script>
