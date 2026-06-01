@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Automated AUX Broadcaster</title>
+    <!-- Stable fallback mirror link for ggwave framework -->
+    <script src="https://cloudflare.com" crossorigin="anonymous"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background: #1a1a1a; color: #fff; padding-top: 50px; }
+        #status { font-size: 24px; color: #00ff00; margin-top: 20px; font-weight: bold; }
+        #startBtn { padding: 15px 30px; font-size: 18px; cursor: pointer; background: #ff4500; border: none; border-radius: 5px; color: white; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Live Analytics AUX Broadcaster</h1>
+    <p>Bundling and transmitting Sub Count via Soundwaves.</p>
+    <button id="startBtn">👉 START BROADCASTER 👈</button>
+    <div id="status">Status: Ready to start...</div>
+
+    <script>
+        let ggwaveCtx = null;
+        let isRunning = false;
+        
+        // 1. IMPORTANT: REPLACE THIS STRING WITH YOUR REAL YOUTUBE CHANNEL ID (Starts with UC...)
+        const CHANNEL_ID = "UCgZkNyFoXSEBek9HKS94FHA"; 
+
+        // Stable, open-source bypass layout tracking endpoint
+        const API_URL = `https://sccount.com{CHANNEL_ID}`;
+
+        document.getElementById('startBtn').addEventListener('click', async () => {
+            if (isRunning) return;
+            isRunning = true;
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            ggwaveCtx = new AudioContext();
+            document.getElementById('startBtn').style.display = 'none';
+            runBroadcastLoop();
+        });
+
+        async function runBroadcastLoop() {
+            while (isRunning) {
+                try {
+                    document.getElementById('status').innerText = "Fetching live network tracker data...";
+                    
+                    let response = await fetch(API_URL);
+                    let data = await response.json();
+                    
+                    // Direct property mapping strings from sccount API layout
+                    let subs = data.subscribers || data.counts?.subscribers || "0";
+                    let name = data.name || data.title || "My Channel";
+                    let handle = data.handle || "@handle";
+                    let bundledData = `${subs}|${name}|${handle}`;
+                    
+                    document.getElementById('status').innerText = `Transmitting over AUX: "${name}" (${handle})`;
+                    
+                    let engine = window.ggwave || window.Ggwave;
+                    let waveform = engine.encode(bundledData, 0, 10); 
+
+                    let audioBuffer = ggwaveCtx.createBuffer(1, waveform.length, 48000);
+                    let channelData = audioBuffer.getChannelData(0);
+                    for (let i = 0; i < waveform.length; i++) { channelData[i] = waveform[i]; }
+                    
+                    let source = ggwaveCtx.createBufferSource();
+                    source.buffer = audioBuffer;
+                    source.connect(ggwaveCtx.destination);
+                    source.start();
+                } catch (error) {
+                    document.getElementById('status').innerText = "Network Block. Retrying in 15 seconds...";
+                    console.error("Fetch Execution Failure Layout Exception:", error);
+                }
+                await new Promise(resolve => setTimeout(resolve, 15000));
+            }
+        }
+    </script>
+</body>
+</html>
