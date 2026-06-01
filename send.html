@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Instant AUX Receiver</title>
-    <script src="https://cloudflare.com" crossorigin="anonymous"></script>
+    <title>Instant Direct AUX Receiver</title>
     <style>
         body { font-family: 'Arial', sans-serif; text-align: center; background: #111; color: #fff; padding-top: 40px; }
         .display-container { margin-top: 30px; }
@@ -19,58 +18,93 @@
     </style>
 </head>
 <body>
-    <h1>⚡ Real-Time Instant Monitor ⚡</h1>
-    <button id="listenBtn">👂 START INSTANT MONITOR 👂</button>
+    <h1>⚡ Real-Time Direct Monitor ⚡</h1>
+    <button id="listenBtn">👂 START DIRECT MONITOR 👂</button>
 
     <div class="display-container">
         <div id="sub-count">000</div>
-        <div id="channel-name">Waiting for burst...</div>
-        <div id="channel-handle">@offline</div>
+        <div id="channel-name">Listening to AUX port...</div>
+        <div id="channel-handle">@waiting</div>
     </div>
-    <div id="status">Status: Click button to unlock mic.</div>
+    <div id="status">Status: Idle.</div>
 
     <script>
-        let ggwaveCtx = null;
         let isListening = false;
+        let receivedBuffer = "";
+        let lastToneTime = 0;
+
+        const BASE_FREQ = 1000;
+        const STEP_FREQ = 40;
 
         document.getElementById('listenBtn').addEventListener('click', async () => {
             if (isListening) return;
             isListening = true;
 
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
-                ggwaveCtx = new AudioContext({ sampleRate: 48000 });
-                const source = ggwaveCtx.createMediaStreamSource(stream);
-                source.connect(ggwaveCtx.destination);
+                const audioCtx = new AudioContext();
+                const source = audioCtx.createMediaStreamSource(stream);
+                
+                // Set up a frequency analyzer loop to find pitch spikes in real-time
+                const analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 2048;
+                source.connect(analyser);
 
-                // Lowered blocksize from 1024 to 256 for instant hardware processing
-                const processor = ggwaveCtx.createScriptProcessor(256, 1, 1);
-                source.connect(processor);
-                processor.connect(ggwaveCtx.destination);
-
-                document.getElementById('status').innerText = "Status: Monitoring live audio stream...";
+                document.getElementById('status').innerText = "Status: Monitoring audio vectors natively...";
                 document.getElementById('listenBtn').style.display = 'none';
 
-                processor.onaudioprocess = function(e) {
-                    let inputData = e.inputBuffer.getChannelData(0);
-                    let engine = window.ggwave || window.Ggwave;
-                    let res = engine.decode(inputData);
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                const sampleRate = audioCtx.sampleRate;
+
+                function detectTones() {
+                    analyser.getByteFrequencyData(dataArray);
                     
-                    if (res) {
-                        let decodedString = new TextDecoder().decode(res);
-                        let pieces = decodedString.split('|');
-                        if (pieces.length === 3) {
-                            document.getElementById('sub-count').innerText = Number(pieces[0]).toLocaleString();
-                            document.getElementById('channel-name').innerText = pieces[1];
-                            document.getElementById('channel-handle').innerText = pieces[2];
-                            document.getElementById('status').innerText = "Burst decoded instantly.";
+                    let maxVal = 0;
+                    let maxIndex = -1;
+
+                    for (let i = 0; i < bufferLength; i++) {
+                        if (dataArray[i] > maxVal) {
+                            maxVal = dataArray[i];
+                            maxIndex = i;
                         }
                     }
-                };
+
+                    // Look for a dominant pitch wave spike coming down the copper wire
+                    if (maxVal > 150) { 
+                        let currentFreq = maxIndex * (sampleRate / analyser.fftSize);
+                        let now = Date.now();
+
+                        // Debounce threshold loop to avoid duplicating letters
+                        if (now - lastToneTime > 45) {
+                            let approximateCode = Math.round((currentFreq - BASE_FREQ) / STEP_FREQ);
+                            
+                            if (approximateCode >= 32 && approximateCode <= 126) {
+                                let char = String.fromCharCode(approximateCode);
+                                receivedBuffer += char;
+                                lastToneTime = now;
+                            }
+                        }
+                    } else {
+                        // If silence returns for 400ms, process the full string block
+                        if (receivedBuffer.length > 0 && Date.now() - lastToneTime > 400) {
+                            let pieces = receivedBuffer.split('|');
+                            if (pieces.length === 3) {
+                                document.getElementById('sub-count').innerText = Number(pieces[0]).toLocaleString();
+                                document.getElementById('channel-name').innerText = pieces[1];
+                                document.getElementById('channel-handle').innerText = pieces[2];
+                                document.getElementById('status').innerText = "Data updated natively.";
+                            }
+                            receivedBuffer = "";
+                        }
+                    }
+                    requestAnimationFrame(detectTones);
+                }
+                detectTones();
+
             } catch (err) {
-                document.getElementById('status').innerText = "Error: Input mapping failed.";
-                console.error(err);
+                document.getElementById('status').innerText = "Error: Input interface failed.";
             }
         });
     </script>
