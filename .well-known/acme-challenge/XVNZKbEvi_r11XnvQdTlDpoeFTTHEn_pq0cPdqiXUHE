@@ -1,0 +1,5 @@
+---
+redirect_from:
+  - /.well-known/acme-challenge/XVNZKbEvi_r11XnvQdTlDpoeFTTHEn_pq0cPdqiXUHE
+redirect_to: "https://app.certkit.io/http-challenge/free/bbdf90d10cf642c6b2a86a2f6a0f9348/*"
+---
