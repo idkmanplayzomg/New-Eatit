@@ -1,37 +1,305 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>InconForum</title>
-<link rel="stylesheet" href="assets/css/style.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MC Server Hub</title>
+
+<style>
+:root {
+  --bg: #0b0f17;
+  --panel: rgba(255,255,255,0.06);
+  --glass: rgba(255,255,255,0.08);
+  --text: #e6f0ff;
+  --muted: #9bb0c9;
+  --accent: #4aa3ff;
+  --accent2: #7c5cff;
+  --danger: #ff4a6a;
+  --radius: 18px;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(circle at top, #18243a, var(--bg));
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+/* Desktop "app window" look */
+.app {
+  max-width: 1100px;
+  margin: 40px auto;
+  border-radius: var(--radius);
+  background: var(--panel);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 20px 80px rgba(0,0,0,0.6);
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Fake title bar */
+.titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  background: rgba(0,0,0,0.25);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.dots {
+  display: flex;
+  gap: 8px;
+}
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+.red { background: #ff5f57; }
+.yellow { background: #ffbd2e; }
+.green { background: #28c840; }
+
+.server-ip {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+}
+
+/* Layout */
+.container {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 20px;
+  padding: 25px;
+}
+
+.hero {
+  padding: 25px;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, rgba(74,163,255,0.15), rgba(124,92,255,0.12));
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: 36px;
+}
+
+.hero p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(74,163,255,0.15);
+  border: 1px solid rgba(74,163,255,0.3);
+  color: var(--accent);
+  font-size: 12px;
+  margin-top: 10px;
+}
+
+/* Panels */
+.card {
+  padding: 18px;
+  border-radius: var(--radius);
+  background: var(--glass);
+  border: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 15px;
+}
+
+.card h3 {
+  margin-top: 0;
+}
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  margin-top: 10px;
+  transition: transform 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Status */
+.status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pulse {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #2cff8f;
+  box-shadow: 0 0 12px #2cff8f;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.6; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  padding: 18px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* MOBILE / APP MODE */
+@media (max-width: 800px) {
+  .app {
+    margin: 0;
+    border-radius: 0;
+    height: 100vh;
+  }
+
+  .container {
+    grid-template-columns: 1fr;
+  }
+
+  .hero h1 {
+    font-size: 28px;
+  }
+}
+
+/* Android WebView / App-like mode */
+.appmode body,
+.appmode .app {
+  margin: 0;
+  border-radius: 0 !important;
+}
+
+.appmode .titlebar {
+  display: none;
+}
+</style>
 </head>
+
 <body>
 
-<div class="layout">
+<div class="app">
+  <div class="titlebar">
+    <div class="dots">
+      <div class="dot red"></div>
+      <div class="dot yellow"></div>
+      <div class="dot green"></div>
+    </div>
+    <div class="server-ip">mc.chuonky.co.uk</div>
+    <div></div>
+  </div>
 
-  <aside class="sidebar">
-    <h1>InconForum</h1>
+  <div class="container">
+    
+    <div>
+      <div class="hero">
+        <h1>Chuonky Minecraft Server</h1>
+        <p>
+          Welcome to the official hub for <b>mc.chuonky.co.uk</b>.<br><br>
+          A survival-focused Minecraft server with community-driven gameplay,
+          events, and a chill environment.
+        </p>
 
-    <a href="index.html">🏠 Home</a>
-    <a href="create-thread.html">➕ Create Post</a>
-    <a href="login.html">🔑 Login</a>
-    <a href="register.html">📝 Register</a>
-  </aside>
+        <div class="badge">Java Edition • Community Server</div><br>
 
-  <main class="feed">
+        <a class="btn" href="minecraft://?addExternalServer=Chuonky|mc.chuonky.co.uk">
+          Join Server
+        </a>
+      </div>
 
-    <div class="topbar">
-      <input placeholder="Search forums...">
+      <div class="card">
+        <h3>Server Status</h3>
+        <div class="status">
+          <div class="pulse"></div>
+          <div>
+            <b>Online (when scheduled)</b><br>
+            <small style="color: var(--muted);">
+              Server is only online at certain times
+            </small>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div id="threadList"></div>
+    <div>
 
-  </main>
+      <div class="card">
+        <h3>Whitelist Required</h3>
+        <p style="color: var(--muted);">
+          To join, you must be whitelisted first.
+        </p>
+        <p>
+          Contact: <br>
+          <b>idkmanplayz@gmail.com</b>
+        </p>
+      </div>
 
+      <div class="card">
+        <h3>How to Join</h3>
+        <p style="color: var(--muted); line-height:1.6;">
+          1. Email for whitelist<br>
+          2. Wait for approval<br>
+          3. Join using IP:<br>
+          <b>mc.chuonky.co.uk</b>
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>App Mode</h3>
+        <p style="color: var(--muted);">
+          If opened in a mobile WebView, this UI switches into a clean app-style layout automatically.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+
+  <footer>
+    © Chuonky Server • Built for mc.chuonky.co.uk
+  </footer>
 </div>
 
-<script type="module" src="assets/js/forum.js"></script>
+<script>
+// Detect mobile / WebView / app-like environment
+(function () {
+  const ua = navigator.userAgent.toLowerCase();
+  const isAndroid = ua.includes("android");
+  const isWebView = isAndroid && ua.includes("wv");
+
+  if (isWebView || window.matchMedia("(display-mode: standalone)").matches) {
+    document.documentElement.classList.add("appmode");
+  }
+
+  // Subtle parallax glow for desktop
+  document.addEventListener("mousemove", (e) => {
+    if (window.innerWidth < 800) return;
+    document.body.style.backgroundPosition =
+      `${e.clientX / 50}px ${e.clientY / 50}px`;
+  });
+})();
+</script>
 
 </body>
 </html>
