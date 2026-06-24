@@ -1,305 +1,330 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>MC Server Hub</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Chuonky SMP</title>
+
+<link href="https://fonts.cdnfonts.com/css/minecraft-4" rel="stylesheet">
 
 <style>
-:root {
-  --bg: #0b0f17;
-  --panel: rgba(255,255,255,0.06);
-  --glass: rgba(255,255,255,0.08);
-  --text: #e6f0ff;
-  --muted: #9bb0c9;
-  --accent: #4aa3ff;
-  --accent2: #7c5cff;
-  --danger: #ff4a6a;
-  --radius: 18px;
+:root{
+    --stone:#7d7d7d;
+    --stone-dark:#5a5a5a;
+    --grass:#55aa33;
+    --grass-dark:#3c7f23;
+    --dirt:#6b4a2d;
+    --gold:#ffff55;
 }
 
-* {
-  box-sizing: border-box;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Minecraft', monospace;
 }
 
-body {
-  margin: 0;
-  background: radial-gradient(circle at top, #18243a, var(--bg));
-  color: var(--text);
-  overflow-x: hidden;
+body{
+    min-height:100vh;
+    color:white;
+
+    background:
+    linear-gradient(
+        rgba(0,0,0,.45),
+        rgba(0,0,0,.45)
+    ),
+    url("https://wallpapercave.com/wp/wp2757874.jpg");
+
+    background-size:cover;
+    background-position:center;
+    background-attachment:fixed;
 }
 
-/* Desktop "app window" look */
-.app {
-  max-width: 1100px;
-  margin: 40px auto;
-  border-radius: var(--radius);
-  background: var(--panel);
-  backdrop-filter: blur(16px);
-  box-shadow: 0 20px 80px rgba(0,0,0,0.6);
-  overflow: hidden;
-  border: 1px solid rgba(255,255,255,0.08);
+.wrapper{
+    max-width:1100px;
+    margin:auto;
+    padding:30px;
 }
 
-/* Fake title bar */
-.titlebar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 18px;
-  background: rgba(0,0,0,0.25);
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+/* Logo */
+
+.logo{
+    text-align:center;
+    margin-bottom:30px;
 }
 
-.dots {
-  display: flex;
-  gap: 8px;
-}
-.dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-}
-.red { background: #ff5f57; }
-.yellow { background: #ffbd2e; }
-.green { background: #28c840; }
+.logo h1{
+    font-size:72px;
+    color:white;
 
-.server-ip {
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  color: var(--muted);
+    text-shadow:
+        4px 4px #000,
+        8px 8px rgba(0,0,0,.4);
 }
 
-/* Layout */
-.container {
-  display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
-  gap: 20px;
-  padding: 25px;
+.splash{
+    display:inline-block;
+
+    color:#ffff00;
+    font-size:20px;
+
+    margin-top:10px;
+
+    transform:rotate(-15deg);
+
+    text-shadow:2px 2px #000;
+
+    animation:splash 1s infinite alternate;
 }
 
-.hero {
-  padding: 25px;
-  border-radius: var(--radius);
-  background: linear-gradient(135deg, rgba(74,163,255,0.15), rgba(124,92,255,0.12));
-  border: 1px solid rgba(255,255,255,0.08);
+@keyframes splash{
+    from{
+        transform:rotate(-15deg) scale(1);
+    }
+    to{
+        transform:rotate(-15deg) scale(1.1);
+    }
 }
 
-.hero h1 {
-  margin: 0;
-  font-size: 36px;
+/* Main Layout */
+
+.grid{
+    display:grid;
+    grid-template-columns:2fr 1fr;
+    gap:20px;
 }
 
-.hero p {
-  color: var(--muted);
-  line-height: 1.6;
+@media(max-width:900px){
+    .grid{
+        grid-template-columns:1fr;
+    }
+
+    .logo h1{
+        font-size:48px;
+    }
 }
 
-.badge {
-  display: inline-block;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: rgba(74,163,255,0.15);
-  border: 1px solid rgba(74,163,255,0.3);
-  color: var(--accent);
-  font-size: 12px;
-  margin-top: 10px;
+/* Minecraft Panel */
+
+.panel{
+    background:var(--stone);
+
+    border:4px solid #000;
+
+    box-shadow:
+        inset 4px 4px #bdbdbd,
+        inset -4px -4px #555,
+        0 8px 25px rgba(0,0,0,.5);
+
+    padding:20px;
 }
 
-/* Panels */
-.card {
-  padding: 18px;
-  border-radius: var(--radius);
-  background: var(--glass);
-  border: 1px solid rgba(255,255,255,0.08);
-  margin-bottom: 15px;
+.hero{
+    text-align:center;
 }
 
-.card h3 {
-  margin-top: 0;
+.hero h2{
+    color:var(--gold);
+    font-size:34px;
+
+    margin-bottom:20px;
+
+    text-shadow:2px 2px #000;
+}
+
+.hero p{
+    line-height:1.8;
+    margin-bottom:20px;
+}
+
+/* Grass Banner */
+
+.banner{
+    background:
+        linear-gradient(
+            var(--grass),
+            var(--grass-dark)
+        );
+
+    padding:12px;
+
+    border:3px solid #000;
+
+    margin-bottom:20px;
+
+    text-align:center;
 }
 
 /* Buttons */
-.btn {
-  display: inline-block;
-  padding: 12px 16px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  color: white;
-  text-decoration: none;
-  font-weight: 600;
-  margin-top: 10px;
-  transition: transform 0.2s ease;
+
+.btn{
+    display:inline-block;
+
+    background:var(--stone);
+
+    color:white;
+    text-decoration:none;
+
+    border:3px solid #000;
+
+    padding:14px 30px;
+
+    box-shadow:
+        inset 3px 3px #d4d4d4,
+        inset -3px -3px #555;
+
+    text-shadow:2px 2px #000;
+
+    transition:.15s;
 }
 
-.btn:hover {
-  transform: translateY(-2px);
+.btn:hover{
+    background:var(--grass);
+}
+
+.btn:active{
+    transform:translateY(2px);
 }
 
 /* Status */
-.status {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+
+.status{
+    display:flex;
+    align-items:center;
+    gap:12px;
 }
 
-.pulse {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #2cff8f;
-  box-shadow: 0 0 12px #2cff8f;
-  animation: pulse 1.5s infinite;
+.online{
+    width:14px;
+    height:14px;
+
+    background:#55ff55;
+
+    border:2px solid #003300;
 }
 
-@keyframes pulse {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.4); opacity: 0.6; }
-  100% { transform: scale(1); opacity: 1; }
+.card{
+    margin-bottom:20px;
+}
+
+.card h3{
+    color:var(--gold);
+    margin-bottom:10px;
+
+    text-shadow:2px 2px #000;
+}
+
+.card p{
+    line-height:1.7;
 }
 
 /* Footer */
-footer {
-  text-align: center;
-  padding: 18px;
-  color: var(--muted);
-  font-size: 13px;
-}
 
-/* MOBILE / APP MODE */
-@media (max-width: 800px) {
-  .app {
-    margin: 0;
-    border-radius: 0;
-    height: 100vh;
-  }
+.footer{
+    text-align:center;
+    margin-top:25px;
 
-  .container {
-    grid-template-columns: 1fr;
-  }
+    color:#ddd;
 
-  .hero h1 {
-    font-size: 28px;
-  }
-}
-
-/* Android WebView / App-like mode */
-.appmode body,
-.appmode .app {
-  margin: 0;
-  border-radius: 0 !important;
-}
-
-.appmode .titlebar {
-  display: none;
+    text-shadow:1px 1px #000;
 }
 </style>
 </head>
-
 <body>
 
-<div class="app">
-  <div class="titlebar">
-    <div class="dots">
-      <div class="dot red"></div>
-      <div class="dot yellow"></div>
-      <div class="dot green"></div>
-    </div>
-    <div class="server-ip">mc.chuonky.co.uk</div>
-    <div></div>
-  </div>
+<div class="wrapper">
 
-  <div class="container">
-    
-    <div>
-      <div class="hero">
-        <h1>Chuonky Minecraft Server</h1>
-        <p>
-          Welcome to the official hub for <b>mc.chuonky.co.uk</b>.<br><br>
-          A survival-focused Minecraft server with community-driven gameplay,
-          events, and a chill environment.
-        </p>
-
-        <div class="badge">Java Edition • Community Server</div><br>
-
-        <a class="btn" href="minecraft://?addExternalServer=Chuonky|mc.chuonky.co.uk">
-          Join Server
-        </a>
-      </div>
-
-      <div class="card">
-        <h3>Server Status</h3>
-        <div class="status">
-          <div class="pulse"></div>
-          <div>
-            <b>Online (when scheduled)</b><br>
-            <small style="color: var(--muted);">
-              Server is only online at certain times
-            </small>
-          </div>
+    <div class="logo">
+        <h1>CHUONKY SMP</h1>
+        <div class="splash">
+            Totally Whitelisted!
         </div>
-      </div>
     </div>
 
-    <div>
+    <div class="grid">
 
-      <div class="card">
-        <h3>Whitelist Required</h3>
-        <p style="color: var(--muted);">
-          To join, you must be whitelisted first.
-        </p>
-        <p>
-          Contact: <br>
-          <b>idkmanplayz@gmail.com</b>
-        </p>
-      </div>
+        <!-- Left Side -->
 
-      <div class="card">
-        <h3>How to Join</h3>
-        <p style="color: var(--muted); line-height:1.6;">
-          1. Email for whitelist<br>
-          2. Wait for approval<br>
-          3. Join using IP:<br>
-          <b>mc.chuonky.co.uk</b>
-        </p>
-      </div>
+        <div>
 
-      <div class="card">
-        <h3>App Mode</h3>
-        <p style="color: var(--muted);">
-          If opened in a mobile WebView, this UI switches into a clean app-style layout automatically.
-        </p>
-      </div>
+            <div class="panel hero">
+
+                <div class="banner">
+                    SERVER ADDRESS:
+                    mc.chuonky.co.uk
+                </div>
+
+                <h2>Welcome Adventurer!</h2>
+
+                <p>
+                    Join the official Chuonky SMP Minecraft server.
+                    Explore, build, survive, and become part of the community.
+                </p>
+
+                <a class="btn"
+                   href="minecraft://?addExternalServer=Chuonky|mc.chuonky.co.uk">
+                    Join Server
+                </a>
+
+            </div>
+
+        </div>
+
+        <!-- Right Side -->
+
+        <div>
+
+            <div class="panel card">
+                <h3>Server Status</h3>
+
+                <div class="status">
+                    <div class="online"></div>
+                    <div>
+                        Online (when scheduled)
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel card">
+                <h3>Whitelist</h3>
+
+                <p>
+                    This server requires approval before joining.
+                </p>
+
+                <br>
+
+                <p>
+                    Contact:
+                    idkmanplayz@gmail.com
+                </p>
+            </div>
+
+            <div class="panel card">
+                <h3>How To Join</h3>
+
+                <p>
+                    1. Request whitelist access<br>
+                    2. Wait for approval<br>
+                    3. Launch EAGLERCRAFT<br>
+                    4. Connect to: (contact email for ip)<br><br>
+
+                    <b></b>
+                </p>
+            </div>
+
+        </div>
 
     </div>
 
-  </div>
+    <div class="footer">
+        © Chuonky SMP • Minecraft Community Server
+    </div>
 
-  <footer>
-    © Chuonky Server • Built for mc.chuonky.co.uk
-  </footer>
 </div>
-
-<script>
-// Detect mobile / WebView / app-like environment
-(function () {
-  const ua = navigator.userAgent.toLowerCase();
-  const isAndroid = ua.includes("android");
-  const isWebView = isAndroid && ua.includes("wv");
-
-  if (isWebView || window.matchMedia("(display-mode: standalone)").matches) {
-    document.documentElement.classList.add("appmode");
-  }
-
-  // Subtle parallax glow for desktop
-  document.addEventListener("mousemove", (e) => {
-    if (window.innerWidth < 800) return;
-    document.body.style.backgroundPosition =
-      `${e.clientX / 50}px ${e.clientY / 50}px`;
-  });
-})();
-</script>
 
 </body>
 </html>
+```
