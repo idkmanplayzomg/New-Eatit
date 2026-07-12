@@ -1,80 +1,237 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LVJY of the Day</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LVJY of the Day</title>
 
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: url("https://www.nme.com/wp-content/uploads/2023/10/Lovejoy_CreditJoe-Magowan.jpg") center center/cover no-repeat fixed;
-            overflow: hidden;
-        }
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
 
-        /* Dark overlay for readability */
-        body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.55);
-            z-index: -1;
-        }
+body{
+    font-family:Arial,Helvetica,sans-serif;
+    background:url("https://www.nme.com/wp-content/uploads/2023/10/Lovejoy_CreditJoe-Magowan.jpg") center center/cover no-repeat fixed;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+}
 
-        .container {
-            text-align: center;
-            background: rgba(0, 0, 0, 0.65);
-            padding: 30px;
-            border-radius: 16px;
-            backdrop-filter: blur(8px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            max-width: 900px;
-            width: 90%;
-        }
+body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.55);
+    z-index:-1;
+}
 
-        h1 {
-            color: white;
-            font-size: 3rem;
-            margin-bottom: 25px;
-            text-shadow: 2px 2px 8px black;
-        }
+.container{
+    width:90%;
+    max-width:900px;
+    background:rgba(0,0,0,.65);
+    backdrop-filter:blur(8px);
+    border-radius:18px;
+    padding:30px;
+    text-align:center;
+    color:white;
+    box-shadow:0 15px 35px rgba(0,0,0,.45);
+}
 
-        video {
-            width: 100%;
-            max-width: 800px;
-            border-radius: 12px;
-            border: 3px solid white;
-            background: black;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
-        }
+h1{
+    font-size:3rem;
+    margin-bottom:10px;
+}
 
-        p {
-            color: #ddd;
-            margin-top: 15px;
-        }
-    </style>
+#videoTitle{
+    color:#ddd;
+    margin-bottom:20px;
+    font-size:1.25rem;
+}
+
+video{
+    width:100%;
+    border-radius:12px;
+    background:black;
+    border:3px solid white;
+}
+
+.controls{
+    margin-top:20px;
+}
+
+button{
+    padding:10px 22px;
+    margin:5px;
+    border:none;
+    border-radius:8px;
+    background:#ffffff;
+    color:#111;
+    cursor:pointer;
+    font-size:16px;
+    transition:.2s;
+}
+
+button:hover{
+    transform:scale(1.05);
+}
+
+#status{
+    margin-top:15px;
+    color:#bbb;
+    font-size:.95rem;
+}
+</style>
 </head>
+
 <body>
 
-    <div class="container">
-        <h1>LVJY of the Day</h1>
+<div class="container">
+    <h1>LVJY of the Day</h1>
 
-        <video controls autoplay>
-            <source src="videoplayback.mp4" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
+    <div id="videoTitle">Loading...</div>
 
-        <p>Now Playing: videoplayback.mp4</p>
+    <video id="player" controls autoplay></video>
+
+    <div class="controls">
+        <button onclick="previous()">⏮ Previous</button>
+        <button onclick="shufflePlaylist()">🔀 Shuffle</button>
+        <button onclick="next()">⏭ Next</button>
     </div>
+
+    <div id="status"></div>
+</div>
+
+<script>
+const API =
+"https://api.github.com/repos/idkmanplayzomg/New-Eatit/contents/Lovejoy";
+
+let playlist = [];
+let current = 0;
+
+const player = document.getElementById("player");
+const title = document.getElementById("videoTitle");
+const status = document.getElementById("status");
+
+function shuffle(array){
+    for(let i=array.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [array[i],array[j]]=[array[j],array[i]];
+    }
+}
+
+async function loadVideos(){
+
+    status.textContent="Loading playlist...";
+
+    try{
+
+        const res=await fetch(API);
+
+        if(!res.ok)
+            throw new Error("GitHub API error");
+
+        const files=await res.json();
+
+        playlist=files
+            .filter(file=>file.name.toLowerCase().endsWith(".mp4"))
+            .map(file=>({
+                title:file.name.replace(/\.mp4$/i,""),
+                url:file.download_url
+            }));
+
+        if(playlist.length===0){
+            status.textContent="No MP4 files found.";
+            title.textContent="No videos";
+            return;
+        }
+
+        shuffle(playlist);
+
+        status.textContent=
+            `${playlist.length} videos found`;
+
+        play(0);
+
+    }catch(err){
+        console.error(err);
+        status.textContent="Couldn't load videos.";
+        title.textContent="Error";
+    }
+}
+
+function play(index){
+
+    current=index;
+
+    player.src=playlist[current].url;
+    title.textContent=playlist[current].title;
+
+    player.load();
+
+    player.play().catch(()=>{});
+}
+
+function next(){
+
+    current++;
+
+    if(current>=playlist.length){
+
+        shuffle(playlist);
+        current=0;
+
+    }
+
+    play(current);
+
+}
+
+function previous(){
+
+    current--;
+
+    if(current<0)
+        current=playlist.length-1;
+
+    play(current);
+
+}
+
+function shufflePlaylist(){
+
+    shuffle(playlist);
+    current=0;
+    play(current);
+
+}
+
+player.addEventListener("ended",next);
+
+document.addEventListener("keydown",e=>{
+
+    if(e.code==="ArrowRight")
+        next();
+
+    if(e.code==="ArrowLeft")
+        previous();
+
+    if(e.code==="Space"){
+        e.preventDefault();
+
+        if(player.paused)
+            player.play();
+        else
+            player.pause();
+    }
+
+});
+
+loadVideos();
+</script>
 
 </body>
 </html>
