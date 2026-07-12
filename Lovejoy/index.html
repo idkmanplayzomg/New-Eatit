@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LVJY of the Day</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: url("https://www.nme.com/wp-content/uploads/2023/10/Lovejoy_CreditJoe-Magowan.jpg") center center/cover no-repeat fixed;
+            overflow: hidden;
+        }
+
+        /* Dark overlay for readability */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: -1;
+        }
+
+        .container {
+            text-align: center;
+            background: rgba(0, 0, 0, 0.65);
+            padding: 30px;
+            border-radius: 16px;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 900px;
+            width: 90%;
+        }
+
+        h1 {
+            color: white;
+            font-size: 3rem;
+            margin-bottom: 25px;
+            text-shadow: 2px 2px 8px black;
+        }
+
+        video {
+            width: 100%;
+            max-width: 800px;
+            border-radius: 12px;
+            border: 3px solid white;
+            background: black;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+        }
+
+        p {
+            color: #ddd;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>LVJY of the Day</h1>
+
+        <video controls autoplay>
+            <source src="videoplayback.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+
+        <p>Now Playing: videoplayback.mp4</p>
+    </div>
+
+</body>
+</html>
